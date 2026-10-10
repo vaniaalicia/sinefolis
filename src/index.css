@@ -1,0 +1,15 @@
+
+@import "tailwindcss";
+
+@theme {
+  --color-ink: #111113;
+  --color-surface: #17171A;
+  --color-line: #26262B;
+  --color-muted: #9A9AA2;
+  --color-brand: #D6363C;
+  --font-sans: "Plus Jakarta Sans", system-ui, sans-serif;
+}
+
+body {
+  @apply bg-ink text-white font-sans;
+}
