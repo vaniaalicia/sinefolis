@@ -1,15 +1,65 @@
-
 @import "tailwindcss";
 
 @theme {
-  --color-ink: #111113;
-  --color-surface: #17171A;
-  --color-line: #26262B;
-  --color-muted: #9A9AA2;
-  --color-brand: #D6363C;
+  /* warna dasar: hitam kebiruan, bukan hitam polos */
+  --color-ink: #07070C;
+  --color-surface: #11111A;
+  --color-line: #23232F;
+  --color-muted: #9B9BAE;
+
+  /* aksen: merah → pink → ungu (dipakai sebagai gradient) */
+  --color-brand: #FF3D54;
+  --color-hot: #FF2E93;
+  --color-violet: #7B5CFF;
+  --color-cyan: #3DE3FF;
+
   --font-sans: "Plus Jakarta Sans", system-ui, sans-serif;
+  --font-display: "Unbounded", "Plus Jakarta Sans", sans-serif;
+
+  --animate-marquee: marquee 35s linear infinite;
+  --animate-aurora: aurora 16s ease-in-out infinite alternate;
+  --animate-float: float 6s ease-in-out infinite;
+
+  @keyframes marquee {
+    from { transform: translateX(0); }
+    to { transform: translateX(-50%); }
+  }
+  @keyframes aurora {
+    0% { transform: translate(0, 0) scale(1); }
+    100% { transform: translate(10%, -8%) scale(1.2); }
+  }
+  @keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-10px); }
+  }
 }
 
-body {
-  @apply bg-ink text-white font-sans;
+html { scroll-behavior: smooth; }
+body { @apply bg-ink font-sans text-white antialiased; }
+::selection { background: var(--color-hot); color: #fff; }
+
+/* teks bergradasi */
+.text-gradient {
+  background: linear-gradient(90deg, var(--color-brand), var(--color-hot) 45%, var(--color-violet));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* garis grid futuristik yang memudar ke pinggir */
+.bg-grid {
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+  background-size: 72px 72px;
+  mask-image: radial-gradient(ellipse at 70% 40%, #000 20%, transparent 70%);
+}
+
+/* sembunyikan scrollbar di rail horizontal */
+.no-scrollbar { scrollbar-width: none; }
+.no-scrollbar::-webkit-scrollbar { display: none; }
+
+/* hormati pengguna yang mematikan animasi di HP/laptopnya */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
 }
