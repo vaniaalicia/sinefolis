@@ -36,7 +36,7 @@ export default function Watchlist() {
             </Link>
           </div>
         ) : (
-          <motion.div layout className="grid grid-cols-2 gap-x-5 gap-y-10 sm:grid-cols-3 lg:grid-cols-4">
+          <motion.div layout className="grid grid-cols-2 gap-x-4 gap-y-8 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
             <AnimatePresence>
               {watchlist.map((m, idx) => (
                 <motion.div
@@ -47,12 +47,12 @@ export default function Watchlist() {
                   exit={{ opacity: 0, scale: 0.9 }}
                   className="group flex flex-col gap-3"
                 >
-                  <Link to={`/movie/${m.id}`} className="relative block aspect-[2/3] overflow-hidden rounded-2xl ring-1 ring-white/10 transition group-hover:ring-white/25">
+                  <Link to={`/movie/${m.id}`} className="relative block aspect-[2/3] overflow-hidden rounded-xl ring-1 ring-white/10 transition group-hover:ring-white/25">
                     <PosterArt src={m.poster} title={m.title} hue={m.hue} className="transition-transform duration-700 group-hover:scale-105" />
                   </Link>
                   <div className="flex items-start justify-between gap-2 px-1">
                     <div className="min-w-0">
-                      <p className="truncate text-sm font-semibold">{m.title}</p>
+                      <p className="truncate text-[13px] font-semibold">{m.title}</p>
                       {m.genre && <p className="text-xs text-white/45">{m.genre}</p>}
                     </div>
                     <button

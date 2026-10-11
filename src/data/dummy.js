@@ -123,6 +123,9 @@ export const rupiah = (n) => 'Rp ' + n.toLocaleString('id-ID')
 
 // ---------- promo & iklan ----------
 // from/to = warna gradasi kartu promo
+// image (opsional) = foto latar. Taruh file foto di folder public/promos/,
+// lalu tulis contohnya: image: '/promos/popcorn.jpg'
+// Tanpa image, kartu tetap tampil dengan gradasi warna.
 export const promos = [
   {
     id: 'p1', title: 'Cashback up to 50%', code: '7DV90K', category: 'Payment', until: '31 Dec 2026', discount: 20,

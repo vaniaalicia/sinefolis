@@ -4,6 +4,18 @@ import { AnimatePresence, motion } from 'motion/react'
 
 const ease = [0.22, 1, 0.36, 1]
 
+// Foto latar (opsional) + lapisan gradasi warna di atasnya.
+// Kalau tidak ada foto, cukup gradasi saja.
+function PhotoBg({ src, gradient }) {
+  if (!src) return null
+  return (
+    <>
+      <img src={src} alt="" className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 group-hover:scale-105" />
+      <div className="absolute inset-0 opacity-75" style={{ background: gradient }} />
+    </>
+  )
+}
+
 /* =========================================================
    Banner iklan besar yang bergeser otomatis
    ========================================================= */
@@ -17,7 +29,7 @@ export function AdCarousel({ ads }) {
   }, [i, ads.length])
 
   return (
-    <div className="relative overflow-hidden rounded-[28px]">
+    <div className="relative overflow-hidden rounded-3xl">
       <AnimatePresence mode="popLayout" initial={false}>
         <motion.a
           key={ad.id}
@@ -26,25 +38,26 @@ export function AdCarousel({ ads }) {
           animate={{ opacity: 1, x: 0 }}
           exit={{ opacity: 0, x: -80 }}
           transition={{ duration: 0.7, ease }}
-          className="group relative flex min-h-[260px] flex-col items-center justify-center gap-4 overflow-hidden px-8 py-14 text-center md:min-h-[300px]"
-          style={{ background: `linear-gradient(120deg, ${ad.from}, ${ad.via} 50%, ${ad.to})` }}
+          className="group relative flex min-h-[190px] flex-col items-center justify-center gap-3 overflow-hidden px-8 py-10 text-center md:min-h-[210px]"
+          style={ad.image ? undefined : { background: `linear-gradient(120deg, ${ad.from}, ${ad.via} 50%, ${ad.to})` }}
         >
+          <PhotoBg src={ad.image} gradient={`linear-gradient(120deg, ${ad.from}, ${ad.via} 50%, ${ad.to})`} />
           {/* tekstur & cahaya */}
           <div className="bg-grid absolute inset-0 opacity-40" />
           <div className="absolute -left-20 -top-20 h-72 w-72 rounded-full bg-white/25 blur-3xl transition-transform duration-700 group-hover:translate-x-10" />
           <div className="absolute -bottom-24 -right-10 h-72 w-72 rounded-full bg-black/25 blur-3xl" />
 
           <span className="relative rounded-full bg-black/25 px-3.5 py-1.5 text-[11px] font-bold uppercase tracking-[0.2em] backdrop-blur-md">{ad.eyebrow}</span>
-          <p className="relative font-display text-2xl font-semibold uppercase leading-tight tracking-tight md:text-4xl">{ad.title}</p>
-          <p className="relative max-w-md text-sm text-white/85 md:text-base">{ad.desc}</p>
-          <span className="relative mt-2 flex h-11 items-center gap-2 rounded-full bg-white px-6 text-sm font-bold text-ink transition-transform group-hover:scale-105">
+          <p className="relative font-display text-xl font-semibold uppercase leading-tight tracking-tight md:text-[28px]">{ad.title}</p>
+          <p className="relative max-w-md text-[13px] text-white/85">{ad.desc}</p>
+          <span className="relative mt-1 flex h-9 items-center gap-2 rounded-full bg-white px-5 text-[13px] font-bold text-ink transition-transform group-hover:scale-105">
             {ad.cta} →
           </span>
         </motion.a>
       </AnimatePresence>
 
       {/* titik penanda slide */}
-      <div className="absolute inset-x-0 bottom-5 flex justify-center gap-2">
+      <div className="absolute inset-x-0 bottom-3 flex justify-center gap-2">
         {ads.map((a, idx) => (
           <button
             key={a.id}
@@ -74,28 +87,29 @@ export function PromoCard({ promo, index = 0 }) {
         viewport={{ once: true, margin: '-40px' }}
         transition={{ duration: 0.6, delay: (index % 3) * 0.08, ease }}
         whileHover={{ y: -6 }}
-        className="group flex flex-col overflow-hidden rounded-3xl border border-white/10 bg-surface"
+        className="group flex flex-col overflow-hidden rounded-2xl border border-white/10 bg-surface"
         style={{ boxShadow: `0 30px 60px -40px ${promo.from}` }}
       >
         <div
-          className="relative flex min-h-[150px] flex-col justify-between gap-6 overflow-hidden p-6"
-          style={{ background: `linear-gradient(135deg, ${promo.from}, ${promo.to})` }}
+          className="relative flex min-h-[104px] flex-col justify-between gap-3 overflow-hidden p-4"
+          style={promo.image ? undefined : { background: `linear-gradient(135deg, ${promo.from}, ${promo.to})` }}
         >
+          <PhotoBg src={promo.image} gradient={`linear-gradient(135deg, ${promo.from}, ${promo.to})`} />
           <div className="absolute -right-10 -top-10 h-40 w-40 rounded-full bg-white/20 blur-2xl transition-transform duration-700 group-hover:scale-150" />
           <span className="relative self-start rounded-full bg-black/25 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.18em] backdrop-blur-md">
             {promo.category}
           </span>
-          <p className="relative font-display text-xl font-semibold uppercase leading-tight tracking-tight">{promo.title}</p>
+          <p className="relative font-display text-[15px] font-semibold uppercase leading-tight tracking-tight">{promo.title}</p>
         </div>
 
-        <div className="flex flex-1 flex-col gap-4 p-6">
-          <p className="text-sm leading-relaxed text-white/60">{promo.desc}</p>
+        <div className="flex flex-1 flex-col gap-3 p-4">
+          <p className="line-clamp-2 text-[13px] leading-relaxed text-white/60">{promo.desc}</p>
           <div className="mt-auto flex items-center justify-between gap-3">
-            <p className="text-xs text-white/40">Valid until {promo.until}</p>
+            <p className="text-[11px] text-white/40">Until {promo.until}</p>
             <motion.button
               whileTap={{ scale: 0.94 }}
               onClick={() => setOpen(true)}
-              className="h-10 shrink-0 rounded-full bg-white px-5 text-[13px] font-bold text-ink transition-colors hover:bg-white/85"
+              className="h-8 shrink-0 rounded-full bg-white px-4 text-xs font-bold text-ink transition-colors hover:bg-white/85"
             >
               View details
             </motion.button>
@@ -143,7 +157,8 @@ function PromoModal({ promo, open, onClose }) {
             transition={{ type: 'spring', stiffness: 260, damping: 26 }}
             className="relative w-full max-w-lg overflow-hidden rounded-[28px] border border-white/10 bg-ink"
           >
-            <div className="relative overflow-hidden p-7" style={{ background: `linear-gradient(135deg, ${promo.from}, ${promo.to})` }}>
+            <div className="group relative overflow-hidden p-7" style={promo.image ? undefined : { background: `linear-gradient(135deg, ${promo.from}, ${promo.to})` }}>
+              <PhotoBg src={promo.image} gradient={`linear-gradient(135deg, ${promo.from}, ${promo.to})`} />
               <div className="absolute -right-10 -top-10 h-44 w-44 rounded-full bg-white/20 blur-2xl" />
               <button
                 onClick={onClose}

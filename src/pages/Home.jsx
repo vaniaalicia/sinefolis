@@ -17,13 +17,43 @@ export default function Home() {
 
   return (
     <main className="relative overflow-x-clip">
-      <Hero featured={featured} />
+      {featured.length ? <Hero featured={featured} /> : <HeroSkeleton />}
       <NowShowing now={nowShowing} top={topRated} />
       <Cinemas firstId={nowShowing[0]?.id} />
       <Deals />
       <ComingSoon items={comingSoon} />
       <ReviewsSection />
     </main>
+  )
+}
+
+/* =========================================================
+   KERANGKA LOADING (tampil sebentar saat data pertama kali dimuat)
+   ========================================================= */
+function HeroSkeleton() {
+  return (
+    <section className="relative h-[100svh] min-h-[680px] overflow-hidden bg-surface">
+      <div className="mx-auto flex h-full max-w-[1280px] flex-col justify-center gap-6 px-6 md:px-12">
+        <div className="h-7 w-40 animate-pulse rounded-full bg-white/[0.07]" />
+        <div className="h-14 w-full max-w-[560px] animate-pulse rounded-2xl bg-white/[0.07]" />
+        <div className="h-5 w-72 animate-pulse rounded-full bg-white/[0.05]" />
+        <div className="h-16 w-full max-w-[460px] animate-pulse rounded-2xl bg-white/[0.05]" />
+        <div className="flex gap-3">
+          <div className="h-13 w-40 animate-pulse rounded-full bg-white/[0.07]" />
+          <div className="h-13 w-44 animate-pulse rounded-full bg-white/[0.05]" />
+        </div>
+      </div>
+    </section>
+  )
+}
+
+function CardSkeleton() {
+  return (
+    <div className="flex flex-col gap-3">
+      <div className="aspect-[2/3] animate-pulse rounded-xl bg-white/[0.06]" />
+      <div className="h-4 w-3/4 animate-pulse rounded-full bg-white/[0.06]" />
+      <div className="h-3 w-1/2 animate-pulse rounded-full bg-white/[0.04]" />
+    </div>
   )
 }
 
@@ -59,7 +89,7 @@ function Hero({ featured }) {
           exit={{ opacity: 0 }}
           transition={{ opacity: { duration: 1.2 }, scale: { duration: 7, ease: 'linear' } }}
         >
-          <PosterArt src={movie.backdrop} title="" hue={movie.hue} />
+          <PosterArt src={movie.backdrop} title="" hue={movie.hue} eager />
         </motion.div>
       </AnimatePresence>
 
@@ -158,7 +188,7 @@ function Hero({ featured }) {
                 }`}
               >
                 <div className="h-16 w-12 shrink-0 overflow-hidden rounded-lg">
-                  <PosterArt title="" hue={f.hue} />
+                  <PosterArt src={f.poster} title="" hue={f.hue} />
                 </div>
                 <div className="min-w-0">
                   <p className={`truncate text-sm font-semibold ${active ? 'text-white' : 'text-white/60'}`}>{f.title}</p>
@@ -226,7 +256,7 @@ function SectionHeader({ label, title, children, center = false }) {
           <span className="h-1.5 w-1.5 rounded-full bg-linear-to-br from-brand to-violet shadow-[0_0_10px_var(--color-hot)]" />
           {label}
         </span>
-        <h2 className="font-display text-3xl font-semibold uppercase leading-none tracking-tight md:text-[44px]">{title}</h2>
+        <h2 className="font-display text-2xl font-semibold uppercase leading-none tracking-tight md:text-[34px]">{title}</h2>
       </div>
       {children}
     </motion.div>
@@ -245,7 +275,7 @@ function NowShowing({ now, top }) {
   const active = tabs.find((t) => t.key === tab)
 
   return (
-    <section id="movies" className="relative mx-auto flex max-w-[1280px] scroll-mt-24 flex-col gap-12 px-6 pb-28 pt-20 md:px-12">
+    <section id="movies" className="relative mx-auto flex max-w-[1280px] scroll-mt-24 flex-col gap-10 px-6 pb-24 pt-20 md:px-12">
       <div className="pointer-events-none absolute right-0 top-40 h-80 w-80 rounded-full bg-violet/15 blur-[100px]" />
 
       <SectionHeader label="In cinemas" title={<>Now <span className="text-gradient">showing</span></>}>
@@ -271,7 +301,8 @@ function NowShowing({ now, top }) {
         </div>
       </SectionHeader>
 
-      <div key={tab} className="grid grid-cols-2 gap-x-5 gap-y-10 sm:grid-cols-3 lg:grid-cols-4 lg:gap-x-7">
+      <div key={tab} className="grid grid-cols-2 gap-x-4 gap-y-8 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
+        {!active.data.length && Array.from({ length: 12 }, (_, i) => <CardSkeleton key={i} />)}
         {active.data.map((m, idx) => (
           <MovieCard key={m.id} movie={m} index={idx} />
         ))}
@@ -299,7 +330,7 @@ function Cinemas({ firstId = 1 }) {
   const features = ['4K Laser', 'Dolby Atmos', 'Recliner seats', 'Lounge & bar']
 
   return (
-    <section id="cinemas" className="relative mx-auto flex max-w-[1280px] scroll-mt-28 flex-col gap-12 px-6 pb-28 md:px-12">
+    <section id="cinemas" className="relative mx-auto flex max-w-[1280px] scroll-mt-28 flex-col gap-10 px-6 pb-24 md:px-12">
       <SectionHeader center label="Our cinemas" title={<>Find a <span className="text-gradient">cinema</span></>}>
         <p className="max-w-md text-white/55">
           {cinemaList.length} locations across {cities.length - 1} cities. Pick one to see what's playing.
@@ -312,12 +343,12 @@ function Cinemas({ firstId = 1 }) {
         whileInView={{ opacity: 1, y: 0, scale: 1 }}
         viewport={{ once: true, margin: '-100px' }}
         transition={{ duration: 1, ease }}
-        className="rounded-[32px] bg-linear-to-br from-brand via-hot to-violet p-px"
+        className="rounded-[28px] bg-linear-to-br from-brand via-hot to-violet p-px"
       >
         <div
           ref={ref}
           onMouseMove={handleMove}
-          className="group relative overflow-hidden rounded-[31px] bg-ink px-8 py-12 md:px-14 md:py-14"
+          className="group relative overflow-hidden rounded-[27px] bg-ink px-7 py-9 md:px-10 md:py-10"
           style={{ '--mx': '50%', '--my': '50%' }}
         >
           <div
@@ -333,7 +364,7 @@ function Cinemas({ firstId = 1 }) {
                 <span className="h-1.5 w-1.5 rounded-full bg-linear-to-br from-brand to-violet shadow-[0_0_10px_var(--color-hot)]" />
                 Sinéfolis Premiere
               </span>
-              <h3 className="font-display text-2xl font-semibold uppercase leading-[1] tracking-tight md:text-4xl">
+              <h3 className="font-display text-xl font-semibold uppercase leading-[1] tracking-tight md:text-[28px]">
                 Not just a movie.
                 <br />
                 <span className="text-gradient">An experience.</span>
@@ -352,9 +383,9 @@ function Cinemas({ firstId = 1 }) {
                   viewport={{ once: true }}
                   transition={{ duration: 0.6, delay: 0.3 + idx * 0.1, ease }}
                   whileHover={{ y: -6 }}
-                  className="rounded-2xl border border-white/10 bg-white/[0.04] p-5 backdrop-blur-md"
+                  className="rounded-2xl border border-white/10 bg-white/[0.04] p-4 backdrop-blur-md"
                 >
-                  <span className="mb-5 block h-2 w-2 rounded-full bg-linear-to-br from-brand to-violet shadow-[0_0_12px_var(--color-hot)]" />
+                  <span className="mb-4 block h-2 w-2 rounded-full bg-linear-to-br from-brand to-violet shadow-[0_0_12px_var(--color-hot)]" />
                   <span className="font-display text-sm font-semibold uppercase tracking-tight">{f}</span>
                 </motion.div>
               ))}
@@ -440,7 +471,7 @@ function Cinemas({ firstId = 1 }) {
    ========================================================= */
 function Deals() {
   return (
-    <section id="promotions" className="relative mx-auto flex max-w-[1280px] scroll-mt-28 flex-col gap-12 px-6 pb-28 md:px-12">
+    <section id="promotions" className="relative mx-auto flex max-w-[1280px] scroll-mt-28 flex-col gap-10 px-6 pb-24 md:px-12">
       <div className="pointer-events-none absolute left-1/4 top-20 h-80 w-80 rounded-full bg-[#FF9F43]/15 blur-[110px]" />
       <SectionHeader center label="Deals & vouchers" title={<>Hot <span className="text-gradient">deals</span></>}>
         <p className="max-w-md text-white/55">Save on tickets and snacks. Copy a code and use it at checkout.</p>
@@ -455,8 +486,8 @@ function Deals() {
         <AdCarousel ads={ads} />
       </motion.div>
 
-      <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-        {promos.slice(0, 3).map((p, idx) => (
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        {promos.slice(0, 4).map((p, idx) => (
           <PromoCard key={p.id} promo={p} index={idx} />
         ))}
       </div>
@@ -476,44 +507,39 @@ function Deals() {
    ========================================================= */
 function ComingSoon({ items }) {
   return (
-    <section id="coming-soon" className="relative mx-auto flex max-w-[1280px] scroll-mt-28 flex-col gap-12 px-6 pb-28 md:px-12">
+    <section id="coming-soon" className="relative mx-auto flex max-w-[1280px] scroll-mt-28 flex-col gap-10 px-6 pb-24 md:px-12">
       <div className="pointer-events-none absolute right-1/4 top-10 h-80 w-80 rounded-full bg-cyan/10 blur-[110px]" />
       <SectionHeader center label="Mark your calendar" title={<>Coming <span className="text-gradient">soon</span></>} />
 
-      <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+      {/* poster tegak (2:3) supaya tidak terpotong */}
+      <div className="grid grid-cols-2 gap-x-4 gap-y-8 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
+        {!items.length &&
+          Array.from({ length: 6 }, (_, i) => <div key={i} className="aspect-[2/3] animate-pulse rounded-xl bg-white/[0.05]" />)}
         {items.map((m, idx) => (
           <motion.article
             key={m.id}
-            initial={{ opacity: 0, y: 40 }}
+            initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: '-40px' }}
-            transition={{ duration: 0.7, delay: (idx % 3) * 0.08, ease }}
+            transition={{ duration: 0.6, delay: (idx % 6) * 0.06, ease }}
             className="group"
           >
             <Link to={`/movie/${m.id}`} className="block">
               <div
-                className="relative aspect-[16/10] overflow-hidden rounded-3xl ring-1 ring-white/10 transition-shadow duration-500 group-hover:ring-white/25"
-                style={{ boxShadow: `0 30px 70px -45px hsl(${m.hue} 95% 60%)` }}
+                className="relative aspect-[2/3] overflow-hidden rounded-xl ring-1 ring-white/10 transition-shadow duration-500 group-hover:ring-white/25"
+                style={{ boxShadow: `0 20px 50px -35px hsl(${m.hue} 95% 60%)` }}
               >
-                <PosterArt src={m.poster} title="" hue={m.hue} className="transition-transform duration-700 group-hover:scale-110" />
-                <div className="absolute inset-0 bg-linear-to-t from-ink/90 via-ink/10 to-transparent" />
-
-                <div className="absolute left-4 top-4 rounded-2xl border border-white/15 bg-black/30 px-3 py-2 text-center backdrop-blur-md">
-                  <span className="block font-display text-lg font-semibold leading-none">{m.date.split(' ')[0]}</span>
-                  <span className="text-[10px] font-semibold uppercase tracking-widest text-white/70">{m.date.split(' ')[1]}</span>
+                <PosterArt src={m.poster} title={m.title} hue={m.hue} className="transition-transform duration-700 group-hover:scale-105" />
+                <div className="absolute left-2.5 top-2.5 rounded-lg border border-white/15 bg-black/45 px-2 py-1 text-center backdrop-blur-md">
+                  <span className="block font-display text-sm font-semibold leading-none">{m.date.split(' ')[0]}</span>
+                  <span className="text-[9px] font-semibold uppercase tracking-widest text-white/70">{m.date.split(' ')[1]}</span>
                 </div>
-
-                <div className="absolute inset-x-5 bottom-5 flex items-end justify-between gap-3">
-                  <div>
-                    <p className="text-[11px] font-semibold uppercase tracking-[0.2em]" style={{ color: `hsl(${m.hue} 90% 72%)` }}>
-                      {m.genre}
-                    </p>
-                    <p className="mt-1 text-base font-semibold leading-tight">{m.title}</p>
-                  </div>
-                  <span className="shrink-0 rounded-full border border-white/20 bg-black/30 px-3 py-1.5 text-[11px] font-semibold backdrop-blur-md">
-                    Coming soon
-                  </span>
-                </div>
+              </div>
+              <div className="mt-3 flex flex-col gap-0.5 px-0.5">
+                <p className="truncate text-[13px] font-semibold">{m.title}</p>
+                <p className="text-[11px] font-medium" style={{ color: `hsl(${m.hue} 90% 72%)` }}>
+                  {m.genre} · Coming soon
+                </p>
               </div>
             </Link>
           </motion.article>

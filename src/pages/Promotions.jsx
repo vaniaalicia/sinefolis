@@ -37,7 +37,7 @@ export default function Promotions() {
           <span className="rounded-full border border-white/10 bg-white/5 px-3.5 py-1.5 text-[11px] font-semibold uppercase tracking-[0.2em] text-white/70 backdrop-blur-md">
             Deals & vouchers
           </span>
-          <h1 className="font-display text-3xl font-semibold uppercase leading-none tracking-tight md:text-[44px]">
+          <h1 className="font-display text-2xl font-semibold uppercase leading-none tracking-tight md:text-[34px]">
             Promo<span className="text-gradient">tions</span>
           </h1>
           <p className="max-w-md text-white/55">Save on tickets, snacks, and more. Copy a code and use it at checkout.</p>
@@ -90,7 +90,7 @@ export default function Promotions() {
           </div>
         </div>
 
-        <motion.div layout className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+        <motion.div layout className="grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
           <AnimatePresence>
             {list.map((p, idx) => (
               <PromoCard key={p.id} promo={p} index={idx} />

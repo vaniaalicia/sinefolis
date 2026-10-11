@@ -32,7 +32,7 @@ export default function ReviewsSection() {
   }
 
   return (
-    <section id="reviews" className="relative mx-auto flex max-w-[1280px] scroll-mt-32 flex-col items-center gap-12 px-6 pb-32 md:px-12">
+    <section id="reviews" className="relative mx-auto flex max-w-[1280px] scroll-mt-32 flex-col items-center gap-10 px-6 pb-24 md:px-12">
       <div className="pointer-events-none absolute left-1/2 top-10 h-80 w-[520px] -translate-x-1/2 rounded-full bg-[#FFC94D]/10 blur-[110px]" />
 
       <motion.div
@@ -46,7 +46,7 @@ export default function ReviewsSection() {
           <span className="h-1.5 w-1.5 rounded-full bg-[#FFC94D] shadow-[0_0_10px_#FFC94D]" />
           Audience reviews
         </span>
-        <h2 className="font-display text-3xl font-semibold uppercase leading-none tracking-tight md:text-[44px]">
+        <h2 className="font-display text-2xl font-semibold uppercase leading-none tracking-tight md:text-[34px]">
           What people <span className="text-gradient">say</span>
         </h2>
         <div className="flex items-center gap-3 text-sm text-white/60">

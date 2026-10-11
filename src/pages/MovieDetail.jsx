@@ -107,7 +107,7 @@ function MovieDetailView({ movie, credits }) {
       {/* ================= HERO FILM ================= */}
       <section className="relative overflow-hidden">
         <div className="absolute inset-0 scale-110 opacity-70 blur-2xl">
-          <PosterArt src={movie.backdrop} title="" hue={movie.hue} />
+          <PosterArt src={movie.backdrop} title="" hue={movie.hue} eager />
         </div>
         <div className="absolute inset-0 bg-linear-to-b from-ink/40 via-ink/70 to-ink" />
         <div className="bg-grid absolute inset-0 opacity-40" />
@@ -125,7 +125,7 @@ function MovieDetailView({ movie, credits }) {
               className="animate-float overflow-hidden rounded-3xl ring-1 ring-white/15 aspect-[2/3]"
               style={{ boxShadow: `0 40px 100px -30px hsl(${movie.hue} 95% 60% / 0.6)` }}
             >
-              <PosterArt src={movie.poster} title={movie.title} hue={movie.hue} />
+              <PosterArt src={movie.poster} title={movie.title} hue={movie.hue} eager />
             </div>
           </motion.div>
 

@@ -9,6 +9,55 @@ const hueFromId = (id) => (Number(id) * 47) % 360
 
 const fmtDate = (s) => (s ? new Date(s).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }) : '')
 
+// ---------- cache: data yang sudah pernah diambil disimpan, jadi kunjungan berikutnya instan ----------
+const HOME_TTL = 30 * 60 * 1000 // 30 menit
+const DETAIL_TTL = 60 * 60 * 1000 // 1 jam
+const mem = new Map()
+const inflight = new Map()
+
+function readCache(key, ttl) {
+  const hit = mem.get(key)
+  if (hit && Date.now() - hit.t < ttl) return hit.v
+  try {
+    const raw = sessionStorage.getItem('tmdb:' + key)
+    if (raw) {
+      const e = JSON.parse(raw)
+      if (Date.now() - e.t < ttl) {
+        mem.set(key, e)
+        return e.v
+      }
+    }
+  } catch {
+    /* sessionStorage bisa diblokir, abaikan */
+  }
+  return null
+}
+
+function writeCache(key, v) {
+  const e = { t: Date.now(), v }
+  mem.set(key, e)
+  try {
+    sessionStorage.setItem('tmdb:' + key, JSON.stringify(e))
+  } catch {
+    /* abaikan */
+  }
+}
+
+// ambil dari cache kalau ada; kalau sedang diambil, tunggu request yang sama (tidak dobel)
+function cached(key, ttl, load) {
+  const hit = readCache(key, ttl)
+  if (hit) return Promise.resolve(hit)
+  if (inflight.has(key)) return inflight.get(key)
+  const p = load()
+    .then((v) => {
+      writeCache(key, v)
+      return v
+    })
+    .finally(() => inflight.delete(key))
+  inflight.set(key, p)
+  return p
+}
+
 async function getJSON(url) {
   const r = await fetch(url)
   if (!r.ok) throw new Error(`TMDB request failed (${r.status})`)
@@ -36,7 +85,7 @@ function mapListMovie(m, genres) {
     age: '',
     rating: m.vote_average ? m.vote_average.toFixed(1) : '',
     overview: m.overview,
-    poster: m.poster_path ? `${IMG}w500${m.poster_path}` : null,
+    poster: m.poster_path ? `${IMG}w342${m.poster_path}` : null,
     backdrop: m.backdrop_path ? `${IMG}w1280${m.backdrop_path}` : null,
     hue: hueFromId(m.id),
     date: fmtDate(m.release_date),
@@ -45,7 +94,7 @@ function mapListMovie(m, genres) {
 }
 
 // semua data untuk Home sekaligus
-export async function getHomeMovies() {
+async function loadHome() {
   const [genres, now, top, upcoming] = await Promise.all([
     getGenres(),
     getJSON('/api/movies?type=now_playing'),
@@ -56,20 +105,22 @@ export async function getHomeMovies() {
   const nowList = (now.results ?? []).map((m) => mapListMovie(m, genres))
   const taglines = ['Featured this week', 'Most watched', 'Just released']
 
+  const withBackdrop = nowList.filter((m) => m.backdrop)
+
   return {
-    featured: nowList
-      .filter((m) => m.backdrop)
-      .slice(0, 3)
-      .map((m, i) => ({ ...m, tagline: taglines[i] })),
-    nowShowing: nowList.slice(0, 8),
-    topRated: (top.results ?? []).slice(0, 8).map((m) => mapListMovie(m, genres)),
+    featured: (withBackdrop.length ? withBackdrop : nowList).slice(0, 3).map((m, i) => ({ ...m, tagline: taglines[i] })),
+    nowShowing: nowList.slice(0, 12),
+    topRated: (top.results ?? []).slice(0, 12).map((m) => mapListMovie(m, genres)),
     // coming soon = tanggal rilis setelah hari ini
     comingSoon: (upcoming.results ?? [])
       .filter((m) => m.release_date > today())
       .slice(0, 6)
-      .map((m) => mapListMovie(m, genres)),
+      .map((m) => ({ ...mapListMovie(m, genres), comingSoon: true })),
   }
 }
+
+export const getHomeMovies = () => cached('home', HOME_TTL, loadHome)
+export const peekHome = () => readCache('home', HOME_TTL)
 
 // rating umur: utamakan versi Indonesia, kalau tidak ada pakai versi US
 function certification(releaseDates) {
@@ -82,7 +133,7 @@ function certification(releaseDates) {
 }
 
 // detail satu film
-export async function getMovieDetail(id) {
+async function loadDetail(id) {
   const d = await getJSON(`/api/movie?id=${id}`)
   const trailer = d.videos?.results?.find((v) => v.site === 'YouTube' && v.type === 'Trailer')
   const director = d.credits?.crew?.find((c) => c.job === 'Director')?.name ?? '—'
@@ -98,7 +149,7 @@ export async function getMovieDetail(id) {
       age: certification(d.release_dates),
       rating: d.vote_average ? d.vote_average.toFixed(1) : '',
       overview: d.overview,
-      poster: d.poster_path ? `${IMG}w500${d.poster_path}` : null,
+      poster: d.poster_path ? `${IMG}w342${d.poster_path}` : null, // sama dengan daftar, jadi tidak dimuat ulang
       backdrop: d.backdrop_path ? `${IMG}w1280${d.backdrop_path}` : null,
       hue: hueFromId(d.id),
       date: fmtDate(d.release_date),
@@ -111,3 +162,16 @@ export async function getMovieDetail(id) {
     },
   }
 }
+
+export const getMovieDetail = (id) => cached(`movie:${id}`, DETAIL_TTL, () => loadDetail(id))
+export const peekDetail = (id) => readCache(`movie:${id}`, DETAIL_TTL)
+
+// film yang sudah ada di daftar Home → bisa langsung ditampilkan tanpa menunggu
+export function peekListMovie(id) {
+  const h = peekHome()
+  if (!h) return null
+  return [...h.featured, ...h.nowShowing, ...h.topRated, ...h.comingSoon].find((m) => String(m.id) === String(id)) ?? null
+}
+
+// dipanggil saat kursor di atas kartu film: detail diambil duluan, jadi saat diklik sudah siap
+export const prefetchMovie = (id) => getMovieDetail(id).catch(() => {})
