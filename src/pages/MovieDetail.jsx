@@ -2,7 +2,8 @@ import { useEffect, useMemo, useState } from 'react'
 import { useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { AnimatePresence, motion } from 'motion/react'
 import PosterArt from '../components/PosterArt'
-import { cinemas, credits, getMovie, halls, rupiah } from '../data/dummy'
+import { cinemas, halls, rupiah } from '../data/dummy'
+import { useMovieDetail } from '../hooks/useTmdb'
 import { useApp } from '../context/AppContext'
 
 const ease = [0.22, 1, 0.36, 1]
@@ -22,10 +23,32 @@ function nextTwoWeeks() {
   })
 }
 
+// Ambil data film dulu (TMDB), tampilkan loading, baru render halaman
 export default function MovieDetail() {
   const { id } = useParams()
+  const { loading, movie, credits } = useMovieDetail(id)
+
+  if (loading) {
+    return (
+      <main className="grid min-h-[100svh] place-items-center">
+        <div className="flex flex-col items-center gap-4 text-sm text-white/50">
+          <motion.span
+            className="h-8 w-8 rounded-full border-2 border-white/15 border-t-hot"
+            animate={{ rotate: 360 }}
+            transition={{ duration: 0.8, repeat: Infinity, ease: 'linear' }}
+          />
+          Loading movie…
+        </div>
+      </main>
+    )
+  }
+
+  return <MovieDetailView key={movie.id} movie={movie} credits={credits} />
+}
+
+function MovieDetailView({ movie, credits }) {
   const navigate = useNavigate()
-  const movie = getMovie(id)
+  const id = movie.id
 
   // data film dirapikan (data dummy bentuknya beda-beda, nanti TMDB seragam)
   const genres = movie.genres ?? [movie.genre]
@@ -40,7 +63,8 @@ export default function MovieDetail() {
   const [cinema, setCinema] = useState(presetCinema && cinemas.includes(presetCinema) ? presetCinema : 'All')
   const isSoon = !!movie.comingSoon
   const [pick, setPick] = useState(null) // { hall, time }
-  const [trailerOpen, setTrailerOpen] = useState(false)
+  // ?trailer=1 (dari tombol Watch trailer di Home) → trailer langsung terbuka
+  const [trailerOpen, setTrailerOpen] = useState(params.get('trailer') === '1')
   const { user, isSaved, toggleWatch } = useApp()
   const { pathname } = useLocation()
   const saved = user ? isSaved(movie.id) : false
@@ -193,7 +217,10 @@ export default function MovieDetail() {
                         {name.split(' ').map((w) => w[0]).join('')}
                       </span>
                     ))}
-                    <span className="ml-3 text-sm text-white/60">{credits.cast.slice(0, 2).join(', ')} +{credits.cast.length - 2}</span>
+                    <span className="ml-3 text-sm text-white/60">
+                      {credits.cast.slice(0, 2).join(', ')}
+                      {credits.cast.length > 2 && ` +${credits.cast.length - 2}`}
+                    </span>
                   </div>
                 </div>
               </div>
@@ -425,8 +452,20 @@ export default function MovieDetail() {
               className="relative aspect-video w-full max-w-4xl overflow-hidden rounded-3xl border border-white/15"
             >
               {/* Tahap 7: ganti isi ini dengan <iframe> YouTube dari data TMDB */}
-              <PosterArt title="" hue={movie.hue} />
-              <div className="absolute inset-0 grid place-items-center text-sm text-white/70">Trailer dari YouTube (Tahap 7)</div>
+              {movie.trailerKey ? (
+                <iframe
+                  src={`https://www.youtube.com/embed/${movie.trailerKey}?autoplay=1&rel=0`}
+                  title={`${movie.title} trailer`}
+                  allow="autoplay; encrypted-media; picture-in-picture"
+                  allowFullScreen
+                  className="absolute inset-0 h-full w-full"
+                />
+              ) : (
+                <>
+                  <PosterArt title="" hue={movie.hue} />
+                  <div className="absolute inset-0 grid place-items-center text-sm text-white/70">Trailer not available yet</div>
+                </>
+              )}
               <button
                 onClick={() => setTrailerOpen(false)}
                 aria-label="Close trailer"

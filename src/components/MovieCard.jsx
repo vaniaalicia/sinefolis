@@ -53,9 +53,11 @@ export default function MovieCard({ movie, index = 0 }) {
             <span className="flex items-center gap-1 rounded-full bg-black/40 px-2.5 py-1 text-[11px] font-semibold backdrop-blur-md">
               <span className="text-[#FFC94D]">★</span> {movie.rating}
             </span>
-            <span className="rounded-full border border-white/20 bg-black/30 px-2 py-0.5 text-[10px] font-bold backdrop-blur-md">
-              {movie.age}
-            </span>
+            {movie.age && (
+              <span className="rounded-full border border-white/20 bg-black/30 px-2 py-0.5 text-[10px] font-bold backdrop-blur-md">
+                {movie.age}
+              </span>
+            )}
           </div>
 
           {/* tombol muncul saat hover */}
@@ -69,7 +71,7 @@ export default function MovieCard({ movie, index = 0 }) {
         <div className="mt-4 flex flex-col gap-1 px-1">
           <p className="truncate text-sm font-semibold transition-colors group-hover:text-white">{movie.title}</p>
           <p className="text-xs text-muted">
-            {movie.genre} <span className="mx-1 text-white/20">/</span> {movie.duration}
+            {movie.genre} <span className="mx-1 text-white/20">/</span> {movie.duration || movie.year}
           </p>
         </div>
       </Link>

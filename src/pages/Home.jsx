@@ -1,23 +1,27 @@
 import { useEffect, useRef, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { AnimatePresence, motion, useScroll, useTransform } from 'motion/react'
 import MovieCard from '../components/MovieCard'
 import PosterArt from '../components/PosterArt'
 import ReviewsSection from '../components/ReviewsSection'
 import { AdCarousel, PromoCard } from '../components/Promo'
-import { featured, nowShowing, topRated, comingSoon, ads, promos, cinemaList } from '../data/dummy'
+import { ads, promos, cinemaList } from '../data/dummy'
+import { useHomeMovies } from '../hooks/useTmdb'
 
 const ease = [0.22, 1, 0.36, 1]
 const SLIDE_MS = 6000
 
 export default function Home() {
+  // data film: dari TMDB (kalau berhasil dimuat) atau dummy
+  const { featured, nowShowing, topRated, comingSoon } = useHomeMovies()
+
   return (
     <main className="relative overflow-x-clip">
-      <Hero />
-      <NowShowing />
-      <Cinemas />
+      <Hero featured={featured} />
+      <NowShowing now={nowShowing} top={topRated} />
+      <Cinemas firstId={nowShowing[0]?.id} />
       <Deals />
-      <ComingSoon />
+      <ComingSoon items={comingSoon} />
       <ReviewsSection />
     </main>
   )
@@ -26,10 +30,11 @@ export default function Home() {
 /* =========================================================
    HERO — slide otomatis, teks muncul bertahap, background bergerak
    ========================================================= */
-function Hero() {
+function Hero({ featured }) {
   const [i, setI] = useState(0)
-  const movie = featured[i]
+  const movie = featured[i % featured.length]
   const ref = useRef(null)
+  const navigate = useNavigate()
 
   // efek parallax: saat di-scroll, isi hero bergerak lebih lambat & memudar
   const { scrollYProgress } = useScroll({ target: ref, offset: ['start start', 'end start'] })
@@ -101,7 +106,7 @@ function Hero() {
                 <span className="flex items-center gap-1 rounded-full bg-[#FFC94D]/15 px-3 py-1 text-xs font-bold text-[#FFC94D]">
                   ★ {movie.rating}
                 </span>
-                {[movie.age, ...movie.genres, movie.year, movie.duration].map((t) => (
+                {[movie.age, ...movie.genres, movie.year, movie.duration].filter(Boolean).map((t) => (
                   <span key={t} className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs text-white/75 backdrop-blur-md">
                     {t}
                   </span>
@@ -126,6 +131,7 @@ function Hero() {
                 <motion.button
                   whileHover={{ scale: 1.04 }}
                   whileTap={{ scale: 0.97 }}
+                  onClick={() => navigate(`/movie/${movie.id}?trailer=1`)}
                   className="flex h-13 items-center gap-3 rounded-full border border-white/15 bg-white/5 pl-2 pr-6 text-sm font-semibold backdrop-blur-md transition-colors hover:bg-white/10"
                 >
                   <span className="grid h-9 w-9 place-items-center rounded-full bg-white text-ink">
@@ -142,7 +148,7 @@ function Hero() {
         <div className="hidden flex-col gap-3 lg:flex">
           <span className="mb-1 text-[11px] font-semibold uppercase tracking-[0.2em] text-white/40">Featured</span>
           {featured.map((f, idx) => {
-            const active = idx === i
+            const active = idx === i % featured.length
             return (
               <button
                 key={f.id}
@@ -156,7 +162,7 @@ function Hero() {
                 </div>
                 <div className="min-w-0">
                   <p className={`truncate text-sm font-semibold ${active ? 'text-white' : 'text-white/60'}`}>{f.title}</p>
-                  <p className="text-xs text-white/40">{f.genres[0]} · {f.duration}</p>
+                  <p className="text-xs text-white/40">{[f.genres[0], f.duration || f.year].filter(Boolean).join(' · ')}</p>
                 </div>
                 {/* progress bar slide */}
                 {active && (
@@ -230,12 +236,11 @@ function SectionHeader({ label, title, children, center = false }) {
 /* =========================================================
    NOW SHOWING — tab dengan "pill" yang meluncur
    ========================================================= */
-const tabs = [
-  { key: 'now', label: 'Now showing', data: nowShowing },
-  { key: 'top', label: 'Top rated', data: topRated },
-]
-
-function NowShowing() {
+function NowShowing({ now, top }) {
+  const tabs = [
+    { key: 'now', label: 'Now showing', data: now },
+    { key: 'top', label: 'Top rated', data: top },
+  ]
   const [tab, setTab] = useState('now')
   const active = tabs.find((t) => t.key === tab)
 
@@ -280,7 +285,7 @@ function NowShowing() {
    ========================================================= */
 const cities = ['All', ...new Set(cinemaList.map((c) => c.city))]
 
-function Cinemas() {
+function Cinemas({ firstId = 1 }) {
   const ref = useRef(null)
   const [city, setCity] = useState('All')
   const list = cinemaList.filter((c) => city === 'All' || c.city === city)
@@ -396,7 +401,7 @@ function Cinemas() {
               exit={{ opacity: 0, scale: 0.95, transition: { duration: 0.2 } }}
             >
               <Link
-                to={`/movie/${featured[0].id}?cinema=${encodeURIComponent(c.name)}#showtimes`}
+                to={`/movie/${firstId}?cinema=${encodeURIComponent(c.name)}#showtimes`}
                 className="group relative flex h-full flex-col gap-4 overflow-hidden rounded-3xl border border-white/10 bg-white/[0.03] p-5 backdrop-blur-md transition-colors hover:border-white/25"
               >
                 <div
@@ -469,14 +474,14 @@ function Deals() {
 /* =========================================================
    COMING SOON — grid di tengah, tanpa scroll samping
    ========================================================= */
-function ComingSoon() {
+function ComingSoon({ items }) {
   return (
     <section id="coming-soon" className="relative mx-auto flex max-w-[1280px] scroll-mt-28 flex-col gap-12 px-6 pb-28 md:px-12">
       <div className="pointer-events-none absolute right-1/4 top-10 h-80 w-80 rounded-full bg-cyan/10 blur-[110px]" />
       <SectionHeader center label="Mark your calendar" title={<>Coming <span className="text-gradient">soon</span></>} />
 
       <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-        {comingSoon.map((m, idx) => (
+        {items.map((m, idx) => (
           <motion.article
             key={m.id}
             initial={{ opacity: 0, y: 40 }}
