@@ -4,6 +4,7 @@ import { AnimatePresence, motion } from 'motion/react'
 import Stepper from '../components/Stepper'
 import PosterArt from '../components/PosterArt'
 import { getMovie, rupiah } from '../data/dummy'
+import { useApp } from '../context/AppContext'
 
 const ease = [0.22, 1, 0.36, 1]
 const ROWS = 'ABCDEFGHIJ'.split('')
@@ -40,7 +41,23 @@ export default function Seats() {
     price: state?.price ?? 100000,
   }
 
-  const taken = useMemo(() => takenSeats(`${movie.id}-${booking.cinema}-${booking.time}`), [movie.id, booking.cinema, booking.time])
+  // kursi yang sudah kamu pesan sebelumnya untuk jadwal yang sama juga dianggap terisi
+  const { bookings } = useApp()
+  const taken = useMemo(() => {
+    const set = takenSeats(`${movie.id}-${booking.cinema}-${booking.time}`)
+    bookings
+      .filter(
+        (x) =>
+          !x.past &&
+          String(x.movie.id) === String(movie.id) &&
+          x.cinema === booking.cinema &&
+          x.hall === booking.hall &&
+          x.date === booking.date &&
+          x.time === booking.time,
+      )
+      .forEach((x) => x.seats.forEach((seat) => set.add(seat)))
+    return set
+  }, [movie.id, booking.cinema, booking.hall, booking.date, booking.time, bookings])
   const [selected, setSelected] = useState([])
   const [warning, setWarning] = useState(false)
 
